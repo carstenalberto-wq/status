@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lagertælling</title>
+<title>LagertÃ¦lling</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -333,19 +333,33 @@
     margin-bottom: 5px;
     display: block;
   }
+
+  /* API Key Banner */
+  .api-banner { background: #fffbe6; border: 1px solid #f0c040; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .api-banner.saved { background: #e8f5e9; border-color: #4caf50; }
+  .api-banner input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: monospace; }
+  .api-banner button { padding: 8px 16px; background: #1a1a18; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .api-banner .api-label { font-size: 14px; color: #7a5c00; font-weight: 600; white-space: nowrap; }
+  .api-banner.saved .api-label { color: #2e7d32; }
 </style>
 </head>
 <body>
 <div class="app">
+  <div class="api-banner" id="apiBanner">
+    <span class="api-label" id="apiLabel">🔑 Anthropic API-nøgle kræves for mikrofonoptagelse:</span>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
+    <button onclick="saveApiKey()">Gem nøgle</button>
+  </div>
+
 
   <header>
-    <h1>Lagertælling</h1>
-    <p>Tal din optælling ind — AI matcher og beregner lagerværdi</p>
+    <h1>LagertÃ¦lling</h1>
+    <p>Tal din optÃ¦lling ind â AI matcher og beregner lagervÃ¦rdi</p>
   </header>
 
   <div class="section">
     <div class="session-row">
-      <input type="text" id="placering" placeholder="Placering (f.eks. EE kælder)" />
+      <input type="text" id="placering" placeholder="Placering (f.eks. EE kÃ¦lder)" />
       <input type="date" id="dato" />
     </div>
   </div>
@@ -359,29 +373,29 @@
           <line x1="9" y1="17" x2="9" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </span>
-      <span id="micLabel">Tryk for at optælle</span>
+      <span id="micLabel">Tryk for at optÃ¦lle</span>
     </button>
 
     <div id="transcriptArea" class="transcript-area">Transskribering vises her...</div>
 
-    <button class="btn hidden" id="analyseBtn" onclick="processTranscript()">Analysér optælling</button>
+    <button class="btn hidden" id="analyseBtn" onclick="processTranscript()">AnalysÃ©r optÃ¦lling</button>
   </div>
 
   <div class="section" id="manualSection">
-    <label class="manual-label">Eller skriv optællingen manuelt (antal + produkt pr. linje):</label>
+    <label class="manual-label">Eller skriv optÃ¦llingen manuelt (antal + produkt pr. linje):</label>
     <textarea id="manualInput" placeholder="8 Shaker Sport&#10;12 Red Bull&#10;1.5 Malibu&#10;1 Jack Daniels" oninput="onManualInput()"></textarea>
-    <button class="btn" style="margin-top:8px" onclick="processManual()">Analysér manuel optælling</button>
+    <button class="btn" style="margin-top:8px" onclick="processManual()">AnalysÃ©r manuel optÃ¦lling</button>
   </div>
 
   <div id="resultsSection" style="display:none">
     <div class="stats">
       <div class="stat"><div class="stat-label">Produkter</div><div class="stat-val" id="statCount">0</div></div>
-      <div class="stat"><div class="stat-label">Lagerværdi</div><div class="stat-val" id="statValue">0</div></div>
-      <div class="stat"><div class="stat-label">Kræver tjek</div><div class="stat-val" id="statDoubt">0</div></div>
+      <div class="stat"><div class="stat-label">LagervÃ¦rdi</div><div class="stat-val" id="statValue">0</div></div>
+      <div class="stat"><div class="stat-label">KrÃ¦ver tjek</div><div class="stat-val" id="statDoubt">0</div></div>
     </div>
 
     <div class="col-labels">
-      <span>Produkt</span><span style="text-align:center">Antal</span><span style="text-align:right">Værdi</span><span></span>
+      <span>Produkt</span><span style="text-align:center">Antal</span><span style="text-align:right">VÃ¦rdi</span><span></span>
     </div>
     <div class="item-list" id="itemList"></div>
 
@@ -402,22 +416,22 @@
 </div>
 
 <script>
-const PRODUCTS = [{"id":1,"stregkode":"5710876354583","navn":"0,3 liter Plastglas","pris":60.19,"enhed":"ruller"},{"id":2,"stregkode":"5710876354606","navn":"0,4 liter Plastglas","pris":46.3,"enhed":"ruller"},{"id":3,"stregkode":"5710754000892","navn":"1724 Tonic","pris":15.3,"enhed":"0.2"},{"id":4,"stregkode":"612511063070","navn":"1883 Blue Curacao","pris":79.3,"enhed":"1.0"},{"id":5,"stregkode":"612511165200","navn":"1883 Brombær Sirup","pris":81.66,"enhed":"1.0"},{"id":6,"stregkode":"3217690018995","navn":"1883 Grenadine","pris":81.66,"enhed":"1.0"},{"id":7,"stregkode":"3217690016458","navn":"1883 Hindbær Sirup","pris":81.66,"enhed":"1.0"},{"id":8,"stregkode":"612511164401","navn":"1883 jordbær","pris":81.66,"enhed":"1.0"},{"id":9,"stregkode":"612511063667","navn":"1883 Jordbær Pure","pris":87.37,"enhed":"1.0"},{"id":19,"stregkode":"7312040017683","navn":"Absolut 0,7","pris":99.63,"enhed":"0.7"},{"id":25,"stregkode":"5010677013147","navn":"Bacardi Hvid","pris":112.0,"enhed":"0.7"},{"id":26,"stregkode":"5010677048071","navn":"Bacardi Limon","pris":112.0,"enhed":"0.5"},{"id":27,"stregkode":"5010677055154","navn":"Bacardi Razz","pris":104.0,"enhed":"0.7"},{"id":32,"stregkode":"5010677714006","navn":"Bombay Sapphire","pris":136.0,"enhed":"0.7"},{"id":46,"stregkode":"57007007","navn":"Carlsberg","pris":6.68,"enhed":"0.33"},{"id":53,"stregkode":"90357985","navn":"Coca Cola Zero","pris":9.18,"enhed":"0.25"},{"id":139,"stregkode":"8001110016303","navn":"Amaretto Disaronno","pris":134.13,"enhed":"0.7"},{"id":142,"stregkode":"8002230000302","navn":"Aperol","pris":113.5,"enhed":"0.7"},{"id":150,"stregkode":"5011013100156","navn":"Baileys","pris":105.4,"enhed":"0.7"},{"id":151,"stregkode":"5000329002193","navn":"Beefeater","pris":115.26,"enhed":"0.7"},{"id":164,"stregkode":"8004400023722","navn":"Branca menta","pris":129.16,"enhed":"0.7"},{"id":166,"stregkode":"5014379006117","navn":"Budweiser","pris":9.34,"enhed":"0.33"},{"id":169,"stregkode":"82000789611","navn":"Bulleit","pris":197.8,"enhed":"0.7"},{"id":170,"stregkode":"813497006215","navn":"Bumbu","pris":239.12,"enhed":"0.7"},{"id":172,"stregkode":"5000281060941","navn":"Captain Morgan Tiki","pris":87.92,"enhed":"0.7"},{"id":175,"stregkode":"5010103916738","navn":"Ciroc 0,7","pris":228.46,"enhed":"0.7"},{"id":178,"stregkode":"3035542004206","navn":"Cointreau","pris":164.14,"enhed":"0.7"},{"id":179,"stregkode":"5700002137715","navn":"Corona","pris":11.78,"enhed":"0.33"},{"id":183,"stregkode":"1200101497214","navn":"Cranberry juice","pris":13.2,"enhed":"1.0"},{"id":184,"stregkode":"5706844500366","navn":"Cuba Apricot","pris":85.23,"enhed":"0.7"},{"id":185,"stregkode":"5706844506917","navn":"Cuba Blueberry","pris":85.23,"enhed":"0.7"},{"id":186,"stregkode":"5706844500311","navn":"Cuba Caramel","pris":85.23,"enhed":"0.7"},{"id":187,"stregkode":"5706844500120","navn":"Cuba Cool Mint","pris":85.23,"enhed":"0.7"},{"id":188,"stregkode":"5706844520203","navn":"Cuba Dry Lemon","pris":85.23,"enhed":"0.7"},{"id":189,"stregkode":"5706844520166","navn":"Cuba Mango","pris":85.23,"enhed":"0.7"},{"id":190,"stregkode":"5706844501059","navn":"Cuba Orange","pris":85.23,"enhed":"0.7"},{"id":191,"stregkode":"5706844505422","navn":"Cuba Passion","pris":87.23,"enhed":"0.7"},{"id":192,"stregkode":"5706844507211","navn":"Cuba Pineapple","pris":85.23,"enhed":"0.7"},{"id":193,"stregkode":"5706844500007","navn":"Cuba Strawberry","pris":85.23,"enhed":"0.7"},{"id":194,"stregkode":"5706844513724","navn":"Cuba vandmelon","pris":85.23,"enhed":"0.7"},{"id":195,"stregkode":"5706844500519","navn":"Cuba Vodka","pris":66.85,"enhed":"0.7"},{"id":198,"stregkode":"7594003620059","navn":"Diplomatico","pris":281.71,"enhed":"0.7"},{"id":204,"stregkode":"8004400012924","navn":"Fernet Branca","pris":130.36,"enhed":"0.7"},{"id":205,"stregkode":"5060108450973","navn":"Fever Tree tonic","pris":9.74,"enhed":"0.2"},{"id":206,"stregkode":"88004023492","navn":"Fireball","pris":99.0,"enhed":"0.7"},{"id":215,"stregkode":"7048352057733","navn":"Gammel Dansk","pris":102.06,"enhed":"0.7"},{"id":216,"stregkode":"8411640000459","navn":"Gin Mare","pris":264.4,"enhed":"0.7"},{"id":218,"stregkode":"5010494560282","navn":"Glenmorangie","pris":355.56,"enhed":"0.7"},{"id":219,"stregkode":"5000289925440","navn":"Gordon's Dry Gin","pris":82.33,"enhed":"0.7"},{"id":220,"stregkode":"5000289929417","navn":"Gordons pink","pris":82.33,"enhed":"0.7"},{"id":66,"stregkode":"5010677850100","navn":"Grey Goose 0,7","pris":304.88,"enhed":"0.7"},{"id":69,"stregkode":"5010677850506","navn":"Grey Goose 1,5","pris":653.32,"enhed":"1.5"},{"id":75,"stregkode":"57008004","navn":"Grøn Tuborg","pris":6.68,"enhed":"0.33"},{"id":224,"stregkode":"8501110088831","navn":"Havana Club 3års","pris":99.61,"enhed":"0.7"},{"id":225,"stregkode":"8501110080439","navn":"Havanna 7 års","pris":196.9,"enhed":"0.7"},{"id":72,"stregkode":"5741000132111","navn":"Heineken","pris":11.41,"enhed":"0.33"},{"id":226,"stregkode":"5010327755014","navn":"Hendricks Gin","pris":231.23,"enhed":"0.7"},{"id":230,"stregkode":"5099873089798","navn":"Jack Daniels","pris":149.59,"enhed":"0.7"},{"id":231,"stregkode":"5099873017623","navn":"Jack Daniels Apple","pris":174.64,"enhed":"0.7"},{"id":232,"stregkode":"5099873001370","navn":"Jack Daniels Honey","pris":174.64,"enhed":"0.7"},{"id":233,"stregkode":"5011007003005","navn":"Jameson","pris":145.74,"enhed":"0.7"},{"id":238,"stregkode":"5701125201130","navn":"Jægermeister","pris":98.15,"enhed":"0.7"},{"id":239,"stregkode":"7610594252148","navn":"Kahlua","pris":104.55,"enhed":"0.7"},{"id":245,"stregkode":"6412700311203","navn":"Koskenkorva Minttu","pris":71.12,"enhed":"0.5"},{"id":246,"stregkode":"6412700335414","navn":"Koskenkorva Passion","pris":62.12,"enhed":"0.5"},{"id":247,"stregkode":"6412700335209","navn":"Koskenkorva Rhubarb","pris":62.12,"enhed":"0.5"},{"id":249,"stregkode":"811538013062","navn":"Kraken Black Spiced","pris":158.64,"enhed":"0.7"},{"id":250,"stregkode":"8410221110150","navn":"Licor 43","pris":129.49,"enhed":"0.7"},{"id":253,"stregkode":"7048351691112","navn":"Linie Aquavit","pris":129.95,"enhed":"0.7"},{"id":254,"stregkode":"85246342978","navn":"Makers Mark","pris":198.95,"enhed":"0.7"},{"id":257,"stregkode":"5000299296028","navn":"Malfy Gin","pris":199.47,"enhed":"0.7"},{"id":261,"stregkode":"5010284100018","navn":"Malibu","pris":91.71,"enhed":"0.7"},{"id":268,"stregkode":"4901777020320","navn":"Midori","pris":125.62,"enhed":"0.7"},{"id":270,"stregkode":"3185370000335","navn":"Moët Brut","pris":280.12,"enhed":"0.7"},{"id":274,"stregkode":"3185370000397","navn":"Moet Nectar","pris":313.62,"enhed":"0.7"},{"id":293,"stregkode":"42213277","navn":"Monkey 47","pris":260.73,"enhed":"0.5"},{"id":294,"stregkode":"5010327105215","navn":"Monkey Shoulder","pris":207.59,"enhed":"0.7"},{"id":295,"stregkode":"5000299223017","navn":"Captain Morgan Spice","pris":89.03,"enhed":"0.7"},{"id":91,"stregkode":"5741000002476","navn":"Pepsi Max","pris":5.62,"enhed":"0.25"},{"id":302,"stregkode":"3035540001740","navn":"Passoa","pris":99.64,"enhed":"1.0"},{"id":304,"stregkode":"8716000968869","navn":"Pisang Ambon","pris":91.4,"enhed":"0.7"},{"id":316,"stregkode":"5700002044068","navn":"Pure Hindbær","pris":88.0,"enhed":"0.7"},{"id":317,"stregkode":"5700002044013","navn":"Pure Lakrids","pris":87.2,"enhed":"0.7"},{"id":320,"stregkode":"5700002044044","navn":"Pure Passion","pris":88.0,"enhed":"0.7"},{"id":324,"stregkode":"90456749","navn":"Red Bull Hyldeblomst","pris":9.3,"enhed":"0.25"},{"id":325,"stregkode":"9002490216030","navn":"Red Bull Sugarfree","pris":9.3,"enhed":"0.25"},{"id":328,"stregkode":"9002490216016","navn":"Redbull Alm.","pris":9.3,"enhed":"0.25"},{"id":329,"stregkode":"90415623","navn":"Redbull Zero","pris":9.3,"enhed":"0.25"},{"id":330,"stregkode":"7401005008580","navn":"Ron Zacapa","pris":365.4,"enhed":"0.7"},{"id":335,"stregkode":"5706844529770","navn":"Råstoff Pineapple","pris":85.87,"enhed":"0.7"},{"id":336,"stregkode":"5706844515322","navn":"Råstoff Caramel","pris":85.87,"enhed":"0.7"},{"id":337,"stregkode":"5706844515100","navn":"Råstoff Jordbær Rabarber","pris":85.87,"enhed":"0.7"},{"id":338,"stregkode":"5706844517609","navn":"Råstoff Lakrids","pris":85.87,"enhed":"0.7"},{"id":340,"stregkode":"8711300776244","navn":"Safari","pris":86.56,"enhed":"0.7"},{"id":342,"stregkode":"80030799","navn":"Sambuca Casoni","pris":95.04,"enhed":"0.7"},{"id":98,"stregkode":"5741000175484","navn":"Shaker Juicy","pris":7.75,"enhed":"0.275"},{"id":99,"stregkode":"5741000164259","navn":"Shaker Original","pris":7.75,"enhed":"0.275"},{"id":100,"stregkode":"5741000164242","navn":"Shaker Sport","pris":7.75,"enhed":"0.275"},{"id":119,"stregkode":"5741000227794","navn":"Shaker Orange","pris":7.75,"enhed":"0.275"},{"id":346,"stregkode":"5410316671118","navn":"Smirnoff","pris":82.36,"enhed":"0.7"},{"id":347,"stregkode":"5410316996068","navn":"Smirnoff ICE","pris":9.84,"enhed":"0.275"},{"id":349,"stregkode":"5410316965934","navn":"Smirnoff ICE Raspberry","pris":9.84,"enhed":"0.275"},{"id":350,"stregkode":"5410316967396","navn":"Smirnoff Raspberry","pris":110.95,"enhed":"0.7"},{"id":376,"stregkode":"1210000100511","navn":"Southern Comfort","pris":122.75,"enhed":"0.7"},{"id":378,"stregkode":"5000281015248","navn":"Tanqueray","pris":110.66,"enhed":"0.7"},{"id":382,"stregkode":"5000281020761","navn":"Tanqueray TEN","pris":234.7,"enhed":"0.7"},{"id":101,"stregkode":"7501049929404","navn":"SOL","pris":13.12,"enhed":"0.33"},{"id":113,"stregkode":"57075150","navn":"Sommersby Apple","pris":13.06,"enhed":"0.275"},{"id":384,"stregkode":"5011026108033","navn":"Tullamore Dew","pris":127.7,"enhed":"0.7"},{"id":395,"stregkode":"3430561114002","navn":"Hvidvin Jean Paul","pris":28.0,"enhed":"0.7"},{"id":401,"stregkode":"3430561112008","navn":"Rødvin Jean Paul","pris":28.0,"enhed":"0.7"},{"id":87,"stregkode":"5741000144435","navn":"Mørk mumme","pris":19.41,"enhed":"0.33"},{"id":238,"stregkode":"5701125201130","navn":"Jægermeister","pris":98.15,"enhed":"0.7"},{"id":376,"stregkode":"1210000100511","navn":"Southern Comfort","pris":122.75,"enhed":"0.7"}];
+const PRODUCTS = [{"id":1,"stregkode":"5710876354583","navn":"0,3 liter Plastglas","pris":60.19,"enhed":"ruller"},{"id":2,"stregkode":"5710876354606","navn":"0,4 liter Plastglas","pris":46.3,"enhed":"ruller"},{"id":3,"stregkode":"5710754000892","navn":"1724 Tonic","pris":15.3,"enhed":"0.2"},{"id":4,"stregkode":"612511063070","navn":"1883 Blue Curacao","pris":79.3,"enhed":"1.0"},{"id":5,"stregkode":"612511165200","navn":"1883 BrombÃ¦r Sirup","pris":81.66,"enhed":"1.0"},{"id":6,"stregkode":"3217690018995","navn":"1883 Grenadine","pris":81.66,"enhed":"1.0"},{"id":7,"stregkode":"3217690016458","navn":"1883 HindbÃ¦r Sirup","pris":81.66,"enhed":"1.0"},{"id":8,"stregkode":"612511164401","navn":"1883 jordbÃ¦r","pris":81.66,"enhed":"1.0"},{"id":9,"stregkode":"612511063667","navn":"1883 JordbÃ¦r Pure","pris":87.37,"enhed":"1.0"},{"id":19,"stregkode":"7312040017683","navn":"Absolut 0,7","pris":99.63,"enhed":"0.7"},{"id":25,"stregkode":"5010677013147","navn":"Bacardi Hvid","pris":112.0,"enhed":"0.7"},{"id":26,"stregkode":"5010677048071","navn":"Bacardi Limon","pris":112.0,"enhed":"0.5"},{"id":27,"stregkode":"5010677055154","navn":"Bacardi Razz","pris":104.0,"enhed":"0.7"},{"id":32,"stregkode":"5010677714006","navn":"Bombay Sapphire","pris":136.0,"enhed":"0.7"},{"id":46,"stregkode":"57007007","navn":"Carlsberg","pris":6.68,"enhed":"0.33"},{"id":53,"stregkode":"90357985","navn":"Coca Cola Zero","pris":9.18,"enhed":"0.25"},{"id":139,"stregkode":"8001110016303","navn":"Amaretto Disaronno","pris":134.13,"enhed":"0.7"},{"id":142,"stregkode":"8002230000302","navn":"Aperol","pris":113.5,"enhed":"0.7"},{"id":150,"stregkode":"5011013100156","navn":"Baileys","pris":105.4,"enhed":"0.7"},{"id":151,"stregkode":"5000329002193","navn":"Beefeater","pris":115.26,"enhed":"0.7"},{"id":164,"stregkode":"8004400023722","navn":"Branca menta","pris":129.16,"enhed":"0.7"},{"id":166,"stregkode":"5014379006117","navn":"Budweiser","pris":9.34,"enhed":"0.33"},{"id":169,"stregkode":"82000789611","navn":"Bulleit","pris":197.8,"enhed":"0.7"},{"id":170,"stregkode":"813497006215","navn":"Bumbu","pris":239.12,"enhed":"0.7"},{"id":172,"stregkode":"5000281060941","navn":"Captain Morgan Tiki","pris":87.92,"enhed":"0.7"},{"id":175,"stregkode":"5010103916738","navn":"Ciroc 0,7","pris":228.46,"enhed":"0.7"},{"id":178,"stregkode":"3035542004206","navn":"Cointreau","pris":164.14,"enhed":"0.7"},{"id":179,"stregkode":"5700002137715","navn":"Corona","pris":11.78,"enhed":"0.33"},{"id":183,"stregkode":"1200101497214","navn":"Cranberry juice","pris":13.2,"enhed":"1.0"},{"id":184,"stregkode":"5706844500366","navn":"Cuba Apricot","pris":85.23,"enhed":"0.7"},{"id":185,"stregkode":"5706844506917","navn":"Cuba Blueberry","pris":85.23,"enhed":"0.7"},{"id":186,"stregkode":"5706844500311","navn":"Cuba Caramel","pris":85.23,"enhed":"0.7"},{"id":187,"stregkode":"5706844500120","navn":"Cuba Cool Mint","pris":85.23,"enhed":"0.7"},{"id":188,"stregkode":"5706844520203","navn":"Cuba Dry Lemon","pris":85.23,"enhed":"0.7"},{"id":189,"stregkode":"5706844520166","navn":"Cuba Mango","pris":85.23,"enhed":"0.7"},{"id":190,"stregkode":"5706844501059","navn":"Cuba Orange","pris":85.23,"enhed":"0.7"},{"id":191,"stregkode":"5706844505422","navn":"Cuba Passion","pris":87.23,"enhed":"0.7"},{"id":192,"stregkode":"5706844507211","navn":"Cuba Pineapple","pris":85.23,"enhed":"0.7"},{"id":193,"stregkode":"5706844500007","navn":"Cuba Strawberry","pris":85.23,"enhed":"0.7"},{"id":194,"stregkode":"5706844513724","navn":"Cuba vandmelon","pris":85.23,"enhed":"0.7"},{"id":195,"stregkode":"5706844500519","navn":"Cuba Vodka","pris":66.85,"enhed":"0.7"},{"id":198,"stregkode":"7594003620059","navn":"Diplomatico","pris":281.71,"enhed":"0.7"},{"id":204,"stregkode":"8004400012924","navn":"Fernet Branca","pris":130.36,"enhed":"0.7"},{"id":205,"stregkode":"5060108450973","navn":"Fever Tree tonic","pris":9.74,"enhed":"0.2"},{"id":206,"stregkode":"88004023492","navn":"Fireball","pris":99.0,"enhed":"0.7"},{"id":215,"stregkode":"7048352057733","navn":"Gammel Dansk","pris":102.06,"enhed":"0.7"},{"id":216,"stregkode":"8411640000459","navn":"Gin Mare","pris":264.4,"enhed":"0.7"},{"id":218,"stregkode":"5010494560282","navn":"Glenmorangie","pris":355.56,"enhed":"0.7"},{"id":219,"stregkode":"5000289925440","navn":"Gordon's Dry Gin","pris":82.33,"enhed":"0.7"},{"id":220,"stregkode":"5000289929417","navn":"Gordons pink","pris":82.33,"enhed":"0.7"},{"id":66,"stregkode":"5010677850100","navn":"Grey Goose 0,7","pris":304.88,"enhed":"0.7"},{"id":69,"stregkode":"5010677850506","navn":"Grey Goose 1,5","pris":653.32,"enhed":"1.5"},{"id":75,"stregkode":"57008004","navn":"GrÃ¸n Tuborg","pris":6.68,"enhed":"0.33"},{"id":224,"stregkode":"8501110088831","navn":"Havana Club 3Ã¥rs","pris":99.61,"enhed":"0.7"},{"id":225,"stregkode":"8501110080439","navn":"Havanna 7 Ã¥rs","pris":196.9,"enhed":"0.7"},{"id":72,"stregkode":"5741000132111","navn":"Heineken","pris":11.41,"enhed":"0.33"},{"id":226,"stregkode":"5010327755014","navn":"Hendricks Gin","pris":231.23,"enhed":"0.7"},{"id":230,"stregkode":"5099873089798","navn":"Jack Daniels","pris":149.59,"enhed":"0.7"},{"id":231,"stregkode":"5099873017623","navn":"Jack Daniels Apple","pris":174.64,"enhed":"0.7"},{"id":232,"stregkode":"5099873001370","navn":"Jack Daniels Honey","pris":174.64,"enhed":"0.7"},{"id":233,"stregkode":"5011007003005","navn":"Jameson","pris":145.74,"enhed":"0.7"},{"id":238,"stregkode":"5701125201130","navn":"JÃ¦germeister","pris":98.15,"enhed":"0.7"},{"id":239,"stregkode":"7610594252148","navn":"Kahlua","pris":104.55,"enhed":"0.7"},{"id":245,"stregkode":"6412700311203","navn":"Koskenkorva Minttu","pris":71.12,"enhed":"0.5"},{"id":246,"stregkode":"6412700335414","navn":"Koskenkorva Passion","pris":62.12,"enhed":"0.5"},{"id":247,"stregkode":"6412700335209","navn":"Koskenkorva Rhubarb","pris":62.12,"enhed":"0.5"},{"id":249,"stregkode":"811538013062","navn":"Kraken Black Spiced","pris":158.64,"enhed":"0.7"},{"id":250,"stregkode":"8410221110150","navn":"Licor 43","pris":129.49,"enhed":"0.7"},{"id":253,"stregkode":"7048351691112","navn":"Linie Aquavit","pris":129.95,"enhed":"0.7"},{"id":254,"stregkode":"85246342978","navn":"Makers Mark","pris":198.95,"enhed":"0.7"},{"id":257,"stregkode":"5000299296028","navn":"Malfy Gin","pris":199.47,"enhed":"0.7"},{"id":261,"stregkode":"5010284100018","navn":"Malibu","pris":91.71,"enhed":"0.7"},{"id":268,"stregkode":"4901777020320","navn":"Midori","pris":125.62,"enhed":"0.7"},{"id":270,"stregkode":"3185370000335","navn":"MoÃ«t Brut","pris":280.12,"enhed":"0.7"},{"id":274,"stregkode":"3185370000397","navn":"Moet Nectar","pris":313.62,"enhed":"0.7"},{"id":293,"stregkode":"42213277","navn":"Monkey 47","pris":260.73,"enhed":"0.5"},{"id":294,"stregkode":"5010327105215","navn":"Monkey Shoulder","pris":207.59,"enhed":"0.7"},{"id":295,"stregkode":"5000299223017","navn":"Captain Morgan Spice","pris":89.03,"enhed":"0.7"},{"id":91,"stregkode":"5741000002476","navn":"Pepsi Max","pris":5.62,"enhed":"0.25"},{"id":302,"stregkode":"3035540001740","navn":"Passoa","pris":99.64,"enhed":"1.0"},{"id":304,"stregkode":"8716000968869","navn":"Pisang Ambon","pris":91.4,"enhed":"0.7"},{"id":316,"stregkode":"5700002044068","navn":"Pure HindbÃ¦r","pris":88.0,"enhed":"0.7"},{"id":317,"stregkode":"5700002044013","navn":"Pure Lakrids","pris":87.2,"enhed":"0.7"},{"id":320,"stregkode":"5700002044044","navn":"Pure Passion","pris":88.0,"enhed":"0.7"},{"id":324,"stregkode":"90456749","navn":"Red Bull Hyldeblomst","pris":9.3,"enhed":"0.25"},{"id":325,"stregkode":"9002490216030","navn":"Red Bull Sugarfree","pris":9.3,"enhed":"0.25"},{"id":328,"stregkode":"9002490216016","navn":"Redbull Alm.","pris":9.3,"enhed":"0.25"},{"id":329,"stregkode":"90415623","navn":"Redbull Zero","pris":9.3,"enhed":"0.25"},{"id":330,"stregkode":"7401005008580","navn":"Ron Zacapa","pris":365.4,"enhed":"0.7"},{"id":335,"stregkode":"5706844529770","navn":"RÃ¥stoff Pineapple","pris":85.87,"enhed":"0.7"},{"id":336,"stregkode":"5706844515322","navn":"RÃ¥stoff Caramel","pris":85.87,"enhed":"0.7"},{"id":337,"stregkode":"5706844515100","navn":"RÃ¥stoff JordbÃ¦r Rabarber","pris":85.87,"enhed":"0.7"},{"id":338,"stregkode":"5706844517609","navn":"RÃ¥stoff Lakrids","pris":85.87,"enhed":"0.7"},{"id":340,"stregkode":"8711300776244","navn":"Safari","pris":86.56,"enhed":"0.7"},{"id":342,"stregkode":"80030799","navn":"Sambuca Casoni","pris":95.04,"enhed":"0.7"},{"id":98,"stregkode":"5741000175484","navn":"Shaker Juicy","pris":7.75,"enhed":"0.275"},{"id":99,"stregkode":"5741000164259","navn":"Shaker Original","pris":7.75,"enhed":"0.275"},{"id":100,"stregkode":"5741000164242","navn":"Shaker Sport","pris":7.75,"enhed":"0.275"},{"id":119,"stregkode":"5741000227794","navn":"Shaker Orange","pris":7.75,"enhed":"0.275"},{"id":346,"stregkode":"5410316671118","navn":"Smirnoff","pris":82.36,"enhed":"0.7"},{"id":347,"stregkode":"5410316996068","navn":"Smirnoff ICE","pris":9.84,"enhed":"0.275"},{"id":349,"stregkode":"5410316965934","navn":"Smirnoff ICE Raspberry","pris":9.84,"enhed":"0.275"},{"id":350,"stregkode":"5410316967396","navn":"Smirnoff Raspberry","pris":110.95,"enhed":"0.7"},{"id":376,"stregkode":"1210000100511","navn":"Southern Comfort","pris":122.75,"enhed":"0.7"},{"id":378,"stregkode":"5000281015248","navn":"Tanqueray","pris":110.66,"enhed":"0.7"},{"id":382,"stregkode":"5000281020761","navn":"Tanqueray TEN","pris":234.7,"enhed":"0.7"},{"id":101,"stregkode":"7501049929404","navn":"SOL","pris":13.12,"enhed":"0.33"},{"id":113,"stregkode":"57075150","navn":"Sommersby Apple","pris":13.06,"enhed":"0.275"},{"id":384,"stregkode":"5011026108033","navn":"Tullamore Dew","pris":127.7,"enhed":"0.7"},{"id":395,"stregkode":"3430561114002","navn":"Hvidvin Jean Paul","pris":28.0,"enhed":"0.7"},{"id":401,"stregkode":"3430561112008","navn":"RÃ¸dvin Jean Paul","pris":28.0,"enhed":"0.7"},{"id":87,"stregkode":"5741000144435","navn":"MÃ¸rk mumme","pris":19.41,"enhed":"0.33"},{"id":238,"stregkode":"5701125201130","navn":"JÃ¦germeister","pris":98.15,"enhed":"0.7"},{"id":376,"stregkode":"1210000100511","navn":"Southern Comfort","pris":122.75,"enhed":"0.7"}];
 
 const ALIASES = {
   "red bull": "redbull alm.", "redbull": "redbull alm.",
-  "kalua": "kahlua", "kahlúa": "kahlua",
-  "råstof": "råstoff",
+  "kalua": "kahlua", "kahlÃºa": "kahlua",
+  "rÃ¥stof": "rÃ¥stoff",
   "smirnoff vodka": "smirnoff",
   "jack": "jack daniels",
-  "jager": "jægermeister", "jaeger": "jægermeister", "jäger": "jægermeister", "jæger": "jægermeister",
+  "jager": "jÃ¦germeister", "jaeger": "jÃ¦germeister", "jÃ¤ger": "jÃ¦germeister", "jÃ¦ger": "jÃ¦germeister",
   "bacardi": "bacardi hvid",
-  "havana": "havana club 3års",
-  "havanna": "havanna 7 års",
+  "havana": "havana club 3Ã¥rs",
+  "havanna": "havanna 7 Ã¥rs",
   "captain morgan": "captain morgan spice",
   "gordons": "gordon's dry gin", "gordon": "gordon's dry gin",
   "grey goose": "grey goose 0,7",
-  "moet": "moët brut", "moët": "moët brut",
+  "moet": "moÃ«t brut", "moÃ«t": "moÃ«t brut",
   "hendricks": "hendricks gin",
   "monkey": "monkey shoulder",
   "shaker": "shaker sport",
@@ -481,10 +495,10 @@ async function toggleRecord() {
       const btn = document.getElementById('micBtn');
       btn.classList.add('recording');
       document.getElementById('micIcon').innerHTML = '<div class="dot-anim"></div>';
-      document.getElementById('micLabel').textContent = 'Optager — tryk for at stoppe';
+      document.getElementById('micLabel').textContent = 'Optager â tryk for at stoppe';
       document.getElementById('transcriptArea').textContent = 'Optager...';
     } catch(e) {
-      document.getElementById('transcriptArea').textContent = 'Mikrofon ikke tilgængelig. Brug manuel indtastning.';
+      document.getElementById('transcriptArea').textContent = 'Mikrofon ikke tilgÃ¦ngelig. Brug manuel indtastning.';
     }
   } else {
     mediaRecorder.stop();
@@ -493,7 +507,7 @@ async function toggleRecord() {
     const btn = document.getElementById('micBtn');
     btn.classList.remove('recording');
     document.getElementById('micIcon').innerHTML = '<svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="1" width="8" height="11" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M1 9c0 4.4 3.6 8 8 8s8-3.6 8-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="17" x2="9" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-    document.getElementById('micLabel').textContent = 'Tryk for at optælle';
+    document.getElementById('micLabel').textContent = 'Tryk for at optÃ¦lle';
   }
 }
 
@@ -504,14 +518,14 @@ async function handleStop() {
     const b64 = await blobToBase64(blob);
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': (sessionStorage.getItem('anthropic_key') || ''), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{
           role: 'user',
           content: [
-            { type: 'text', text: 'Transskriber denne lageroptælling fra en bar. Returner KUN linjer i formatet:\n[antal] [produktnavn]\n\nBrug punktum som decimalseparator. Ignorer eventuel indledning med barens navn. Kun produktlinjer.' },
+            { type: 'text', text: 'Transskriber denne lageroptÃ¦lling fra en bar. Returner KUN linjer i formatet:\n[antal] [produktnavn]\n\nBrug punktum som decimalseparator. Ignorer eventuel indledning med barens navn. Kun produktlinjer.' },
             { type: 'document', source: { type: 'base64', media_type: 'audio/webm', data: b64 } }
           ]
         }]
@@ -519,13 +533,13 @@ async function handleStop() {
     });
     const data = await resp.json();
     transcript = (data.content?.find(b => b.type === 'text')?.text || '').trim();
-    document.getElementById('transcriptArea').textContent = transcript || 'Ingen tekst genkendt — prøv manuel indtastning';
+    document.getElementById('transcriptArea').textContent = transcript || 'Ingen tekst genkendt â prÃ¸v manuel indtastning';
     const analyseBtn = document.getElementById('analyseBtn');
     if (transcript) {
       analyseBtn.classList.remove('hidden');
     }
   } catch(e) {
-    document.getElementById('transcriptArea').textContent = 'Fejl — brug manuel indtastning nedenfor';
+    document.getElementById('transcriptArea').textContent = 'Fejl â brug manuel indtastning nedenfor';
   }
 }
 
@@ -571,8 +585,8 @@ function render() {
         <div class="item-sub">${item.product ? item.product.stregkode + ' &middot; ' + item.product.enhed + 'L' : ''}${item.confidence !== 'high' ? '<span class="doubt-tag">tjek</span>' : ''}</div>
       </div>
       <div><input class="item-qty-input" type="number" step="0.5" min="0" value="${item.qty}" onchange="updateQty(${i},this.value)" /></div>
-      <div class="item-value">${val > 0 ? val.toFixed(2) + ' kr' : '—'}</div>
-      <button class="item-del" onclick="removeItem(${i})">×</button>`;
+      <div class="item-value">${val > 0 ? val.toFixed(2) + ' kr' : 'â'}</div>
+      <button class="item-del" onclick="removeItem(${i})">Ã</button>`;
     list.appendChild(div);
   });
 
@@ -615,7 +629,7 @@ function saveSession() {
     }))
   });
   localStorage.setItem('lager_v2', JSON.stringify(sessions));
-  document.getElementById('statusMsg').textContent = '✓ Gemt — ' + pl + ', ' + dt;
+  document.getElementById('statusMsg').textContent = 'â Gemt â ' + pl + ', ' + dt;
   document.getElementById('histSection').style.display = 'block';
   renderHistory();
   setTimeout(() => document.getElementById('statusMsg').textContent = '', 3000);
@@ -650,10 +664,28 @@ function renderHistory() {
   sessions.slice(0, 15).forEach(s => {
     const d = document.createElement('div');
     d.className = 'hist-item';
-    d.innerHTML = `<span>${s.dato} — ${s.placering}</span><span class="hist-meta">${s.total.toLocaleString('da-DK')} kr &middot; ${s.count} prod.</span>`;
+    d.innerHTML = `<span>${s.dato} â ${s.placering}</span><span class="hist-meta">${s.total.toLocaleString('da-DK')} kr &middot; ${s.count} prod.</span>`;
     el.appendChild(d);
   });
 }
+
+  // API Key management
+  (function() {
+    const key = sessionStorage.getItem('anthropic_key');
+    if (key) {
+      document.getElementById('apiBanner').className = 'api-banner saved';
+      document.getElementById('apiLabel').textContent = '✓ API-nøgle er gemt for denne session';
+      document.getElementById('apiKeyInput').value = key;
+    }
+  })();
+  function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key.startsWith('sk-ant-')) { alert('Ugyldig nøgle — skal starte med sk-ant-'); return; }
+    sessionStorage.setItem('anthropic_key', key);
+    document.getElementById('apiBanner').className = 'api-banner saved';
+    document.getElementById('apiLabel').textContent = '✓ API-nøgle gemt for denne session';
+  }
+
 </script>
 </body>
 </html>
